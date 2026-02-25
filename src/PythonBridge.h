@@ -3,7 +3,6 @@
 
 #include <wx/string.h>
 #include <wx/process.h>
-#include <wx/jsonval.h>
 #include <wx/jsonwriter.h>
 #include <wx/jsonreader.h>
 #include <atomic>

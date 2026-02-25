@@ -4,6 +4,9 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <map>
+#include <vector>
+#include <wx/datetime.h>
 
 SessionData EventMonitor::s_baselineData;
 bool EventMonitor::s_hasBaseline = false;

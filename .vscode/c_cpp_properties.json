@@ -11,7 +11,8 @@
                 "C:/msys64/ucrt64/include",
                 "C:/msys64/mingw64/include",
                 "C:/msys64/mingw64/include/c++/15.2.0",
-                "C:/msys64/mingw64/include/c++/15.2.0/x86_64-w64-mingw32"
+                "C:/msys64/mingw64/include/c++/15.2.0/x86_64-w64-mingw32",
+                "C:/msys64/ucrt64/lib/wx/include/msw-unicode-3.2"
             ],
             "defines": [
                 "_DEBUG",
