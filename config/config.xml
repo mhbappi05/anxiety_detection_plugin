@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<AnxietyPlugin>
+    <Settings>
+        <!-- Python executable path (leave as "python" if in PATH) -->
+        <PythonPath>python</PythonPath>
+        
+        <!-- Directory containing model files -->
+        <ModelPath>C:\Program Files\CodeBlocks\share\CodeBlocks\anxiety_models</ModelPath>
+        
+        <!-- Anxiety threshold for intervention (0.0 to 1.0) -->
+        <AnxietyThreshold>0.7</AnxietyThreshold>
+        
+        <!-- Cooldown between interventions in seconds -->
+        <InterventionCooldown>300</InterventionCooldown>
+        
+        <!-- Languages to monitor -->
+        <EnableC>true</EnableC>
+        <EnableCpp>true</EnableCpp>
+        
+        <!-- Auto-calibrate on startup -->
+        <AutoCalibrate>true</AutoCalibrate>
+        
+        <!-- Show notification popups -->
+        <ShowNotifications>true</ShowNotifications>
+        
+        <!-- Play sound on intervention (requires notification sound) -->
+        <PlaySounds>false</PlaySounds>
+        
+        <!-- Minimum session length for analysis (seconds) -->
+        <MinSessionLength>60</MinSessionLength>
+        
+        <!-- Log level: DEBUG, INFO, WARNING, ERROR -->
+        <LogLevel>INFO</LogLevel>
+    </Settings>
+    
+    <ErrorHints>
+        <Hint error="syntax error">Check for missing semicolons, brackets, or parentheses</Hint>
+        <Hint error="missing semicolon">You might be missing a semicolon at the end of a statement</Hint>
+        <Hint error="undefined reference">You might be missing a header file or library link</Hint>
+        <Hint error="missing header">Check if you've included the necessary header files</Hint>
+        <Hint error="segmentation fault">Check for null pointers or array bounds</Hint>
+        <Hint error="null pointer">Make sure to initialize pointers before using them</Hint>
+        <Hint error="array bounds">Ensure array indices are within bounds</Hint>
+        <Hint error="uninitialized">Initialize variables before using them</Hint>
+        <Hint error="memory leak">Remember to free allocated memory</Hint>
+        <Hint error="buffer overflow">Check array sizes and string lengths</Hint>
+        <Hint error="type mismatch">Ensure types are compatible</Hint>
+        <Hint error="no matching function">Check function parameters and overloads</Hint>
+        <Hint error="ambiguous">Make the call more specific</Hint>
+        <Hint error="redefinition">Remove duplicate declarations</Hint>
+        <Hint error="undeclared">Declare variables before using them</Hint>
+        <Hint error="incomplete type">Include the full type definition</Hint>
+    </ErrorHints>
+    
+    <RelaxationMessages>
+        <Message>Take a deep breath. The solution is often simpler than it seems.</Message>
+        <Message>Consider taking a 2-minute break to clear your mind.</Message>
+        <Message>Try breaking the problem down into smaller parts.</Message>
+        <Message>Sometimes walking away for a moment helps. Why not stretch?</Message>
+        <Message>You've solved harder problems before. You can do this!</Message>
+        <Message>Take a moment to review your logic step by step.</Message>
+        <Message>Remember: every expert was once a beginner.</Message>
+        <Message>Try explaining the problem to someone (or to a rubber duck).</Message>
+        <Message>Your brain needs rest. A short break will help.</Message>
+        <Message>Progress, not perfection. You're getting there!</Message>
+    </RelaxationMessages>
+    
+    <SuccessMessages>
+        <Message>Great job fixing that error!</Message>
+        <Message>You're making excellent progress!</Message>
+        <Message>Keep up the good work!</Message>
+        <Message>Another problem solved!</Message>
+    </SuccessMessages>
+    
+    <REDThresholds>
+        <!-- Repeated Error Density thresholds -->
+        <Low>1.0</Low>
+        <Moderate>2.0</Moderate>
+        <High>2.5</High>
+        <Extreme>3.5</Extreme>
+    </REDThresholds>
+    
+    <TypingThresholds>
+        <!-- Typing speed drop thresholds (percentage) -->
+        <Low>15</Low>
+        <Moderate>25</Moderate>
+        <High>35</High>
+        <Extreme>50</Extreme>
+    </TypingThresholds>
+</AnxietyPlugin>
