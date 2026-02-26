@@ -1,7 +1,7 @@
 #include "AnxietyPlugin.h"
+#include "InterventionManager.h"
 #include "EventMonitor.h"
 #include "PythonBridge.h"
-#include "InterventionManager.h"
 // #include <cbproject.h>
 // #include <manager.h>
 // #include <logmanager.h>
@@ -316,7 +316,7 @@ void AnxietyPlugin::OnShowStats(wxCommandEvent& event)
         "High Backspace Rate: %s\n"
         "Irregular Rhythm: %s\n"
     ),
-        (wxDateTime::Now() - session.sessionStart).GetMinutes().GetValue(),
+        (long)(wxDateTime::Now() - session.sessionStart).GetSeconds().ToLong() / 60,
         session.totalKeystrokes,
         session.totalBackspaces,
         session.totalKeystrokes > 0 ? (100.0 * session.totalBackspaces / session.totalKeystrokes) : 0,

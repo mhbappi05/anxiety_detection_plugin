@@ -1,20 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
-<CodeBlocksPlugin name="AnxietyDetection"
-                  version="1.0"
-                  author="Md Mahmudul Hasan"
-                  email="mhbappi05@gmail.com"
-                  website="https://github.com/mhbappi05"
-                  description="Real-time anxiety detection and intervention for C/C++ programmers">
-    
-    <SDKVersion min="2.16.0" max="2.99.0" />
-    
-    <ModuleRequirements>
-        <Module name="EditorManager" />
-        <Module name="ProjectManager" />
-        <Module name="Compiler" />
-    </ModuleRequirements>
-    
-    <Dependencies>
-        <Dependency name="Python" version="3.10+" />
-    </Dependencies>
-</CodeBlocksPlugin>
+<CodeBlocks_plugin_manifest_file>
+    <SdkVersion major="2" minor="0" release="0" />
+    <Plugin name="AnxietyDetection">
+        <Value title="Anxiety Detection and Intervention"
+               version="1.0"
+               description="Real-time anxiety detection and intervention for C/C++ programmers"
+               author="Md Mahmudul Hasan"
+               authorEmail="mhbappi05@gmail.com"
+               authorWebsite="https://github.com/mhbappi05"
+               thanksTo="" />
+    </Plugin>
+</CodeBlocks_plugin_manifest_file>

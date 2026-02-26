@@ -2,13 +2,13 @@
 #include <wx/textfile.h>
 #include <wx/tokenzr.h>
 #include <wx/regex.h>
+#include <wx/log.h>
 #include <algorithm>
 #include <cmath>
 #include <numeric>
 
 SessionData EventMonitor::s_baselineData;
 bool EventMonitor::s_hasBaseline = false;
-std::map<wxString, int> EventMonitor::s_errorPatterns;
 
 EventMonitor::EventMonitor() 
     : m_isMonitoring(false)
@@ -50,14 +50,14 @@ void EventMonitor::StartMonitoring()
 {
     m_isMonitoring = true;
     ResetSession();
-    Manager::Get()->GetLogManager()->DebugLog(_T("Anxiety monitoring started"));
+    wxLogDebug(_T("Anxiety monitoring started"));
 }
 
 void EventMonitor::StopMonitoring()
 {
     m_isMonitoring = false;
     UpdateBaseline();
-    Manager::Get()->GetLogManager()->DebugLog(_T("Anxiety monitoring stopped"));
+    wxLogDebug(_T("Anxiety monitoring stopped"));
 }
 
 void EventMonitor::RecordKeystroke(char key, bool isBackspace, int keyCode, long modifiers)
@@ -138,29 +138,27 @@ void EventMonitor::ParseCppOutput(CompileEvent& event)
 {
     wxString output = event.output.Lower();
     
-    // Count errors and warnings
-    wxRegEx errorRegex(_T("error:"), wxRE_ADVANCED);
-    wxRegEx warningRegex(_T("warning:"), wxRE_ADVANCED);
-    
-    size_t pos = 0;
-    while (errorRegex.Match(output, &pos))
+    // Count errors by finding all occurrences of "error:"
+    size_t searchFrom = 0;
+    size_t found;
+    while ((found = output.find(_T("error:"), searchFrom)) != wxString::npos)
     {
         event.errorCount++;
-        pos += 5; // length of "error"
+        searchFrom = found + 6; // length of "error:"
     }
     
-    pos = 0;
-    while (warningRegex.Match(output, &pos))
+    searchFrom = 0;
+    while ((found = output.find(_T("warning:"), searchFrom)) != wxString::npos)
     {
         event.warningCount++;
-        pos += 7; // length of "warning"
+        searchFrom = found + 8; // length of "warning:"
     }
     
     // Extract first error message
     int errorPos = output.Find(_T("error:"));
     if (errorPos != wxNOT_FOUND)
     {
-        int endPos = output.find('\n', errorPos);
+        size_t endPos = output.find('\n', errorPos);
         if (endPos != wxString::npos)
             event.errorMessage = output.Mid(errorPos, endPos - errorPos);
         else
@@ -176,28 +174,27 @@ void EventMonitor::ParseCOutput(CompileEvent& event)
     // C compiler output often similar but with slight differences
     wxString output = event.output.Lower();
     
-    wxRegEx errorRegex(_T("error:"), wxRE_ADVANCED);
-    wxRegEx warningRegex(_T("warning:"), wxRE_ADVANCED);
-    
-    size_t pos = 0;
-    while (errorRegex.Match(output, &pos))
+    // Count errors by finding all occurrences of "error:"
+    size_t searchFrom = 0;
+    size_t found;
+    while ((found = output.find(_T("error:"), searchFrom)) != wxString::npos)
     {
         event.errorCount++;
-        pos += 5;
+        searchFrom = found + 6;
     }
     
-    pos = 0;
-    while (warningRegex.Match(output, &pos))
+    searchFrom = 0;
+    while ((found = output.find(_T("warning:"), searchFrom)) != wxString::npos)
     {
         event.warningCount++;
-        pos += 7;
+        searchFrom = found + 8;
     }
     
     // Extract first error
     int errorPos = output.Find(_T("error:"));
     if (errorPos != wxNOT_FOUND)
     {
-        int endPos = output.find('\n', errorPos);
+        size_t endPos = output.find('\n', errorPos);
         if (endPos != wxString::npos)
             event.errorMessage = output.Mid(errorPos, endPos - errorPos);
         else

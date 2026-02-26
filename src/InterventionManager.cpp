@@ -1,5 +1,9 @@
 #include "InterventionManager.h"
+#include <windows.h>
 #include <wx/msgdlg.h>
+#include <wx/textfile.h>
+#include <wx/textdlg.h>
+#include <wx/frame.h>
 #include <wx/statline.h>
 #include <wx/sound.h>
 #include <wx/config.h>
@@ -445,7 +449,7 @@ void InterventionManager::ShowSuccessMessage()
 
 void InterventionManager::ShowCalibrationDialog()
 {
-    InterventionDialog dlg(m_parentFrame, 
+    InterventionDialog dlg(static_cast<wxWindow*>(m_parentFrame), 
         _T("Anxiety Detection Calibration"),
         _T("Calibration will monitor your normal typing pattern for a few minutes.\n\n")
         _T("Please code normally during this time."),
@@ -473,7 +477,7 @@ void InterventionManager::CreateNotificationWindow()
         return;
     
     // Create a hidden panel that will appear when needed
-    m_notificationPanel = new wxPanel(m_parentFrame, wxID_ANY, 
+    m_notificationPanel = new wxPanel(static_cast<wxWindow*>(m_parentFrame), wxID_ANY, 
                                        wxDefaultPosition, 
                                        wxSize(400, 150),
                                        wxBORDER_SIMPLE | wxSTAY_ON_TOP);
@@ -736,7 +740,7 @@ void InterventionManager::OnInterventionButton(wxCommandEvent& event)
         // Show hint dialog
         if (!m_hintText->GetLabel().IsEmpty())
         {
-            wxMessageDialog dlg(m_parentFrame,
+            wxMessageDialog dlg(static_cast<wxWindow*>(m_parentFrame),
                 m_hintText->GetLabel(),
                 _T("Helpful Hint"),
                 wxOK | wxCENTRE | wxICON_INFORMATION);
@@ -753,7 +757,7 @@ void InterventionManager::OnInterventionButton(wxCommandEvent& event)
     {
         // Show feedback dialog
         wxString msg = _T("Was this intervention helpful?\n\nRate from 1 (not helpful) to 5 (very helpful):");
-        wxTextEntryDialog dlg(m_parentFrame, msg, _T("Feedback"), _T("3"));
+        wxTextEntryDialog dlg(static_cast<wxWindow*>(m_parentFrame), msg, _T("Feedback"), _T("3"));
         
         if (dlg.ShowModal() == wxID_OK)
         {

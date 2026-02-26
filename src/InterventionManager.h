@@ -4,6 +4,11 @@
 #include <wx/string.h>
 #include <wx/datetime.h>
 #include <wx/timer.h>
+#include <wx/dialog.h>
+#include <wx/textctrl.h>
+#include <wx/radiobox.h>
+#include <wx/sizer.h>
+#include <wx/stattext.h>
 #include <vector>
 #include <map>
 #include <memory>

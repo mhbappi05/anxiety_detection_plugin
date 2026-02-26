@@ -7,16 +7,17 @@
 #include <wx/timer.h>
 #include <wx/string.h>
 #include <wx/defs.h>
-#include <wx/evthandler.h>
+#include <wx/menu.h>
+#include <wx/toolbar.h>
 #include <memory>
 #include <atomic>
 #include <thread>
 #include <functional>
 
 // Forward declarations
-// class EventMonitor;
-// class PythonBridge;
-// class InterventionManager;
+class EventMonitor;
+class PythonBridge;
+class InterventionManager;
 // class wxMenuBar;
 // class wxMenu;
 // class wxToolBar;

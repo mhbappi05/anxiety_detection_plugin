@@ -3,20 +3,22 @@
 
 #include <wx/string.h>
 #include <wx/process.h>
-#include <wx/jsonwriter.h>
-#include <wx/jsonreader.h>
+#include <wx/datetime.h>
 #include <atomic>
 #include <memory>
 #include <functional>
+#include <vector>
 #include <windows.h>
 
-enum class AnxietyLevel
-{
-    LOW,
-    MODERATE,
-    HIGH,
-    EXTREME
-};
+// Forward declare wxJSONValue to avoid requiring wxJSON headers if not present
+// If your build has wxJSON, uncomment the includes below:
+// #include <wx/jsonwriter.h>
+// #include <wx/jsonreader.h>
+class wxJSONValue;
+
+// Forward declaration to avoid circular includes
+// AnxietyLevel is defined in InterventionManager.h
+enum class AnxietyLevel;
 
 struct PredictionResult
 {

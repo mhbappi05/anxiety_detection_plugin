@@ -54,11 +54,11 @@ if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 :: Copy plugin DLL
 echo.
 echo Copying plugin files...
-if exist "..\build\anxiety_plugin.dll" (
-    copy "..\build\anxiety_plugin.dll" "%PLUGIN_DIR%\" /Y
+if exist "..\anxiety_plugin.dll" (
+    copy "..\anxiety_plugin.dll" "%PLUGIN_DIR%\" /Y
     echo [OK] Plugin DLL copied
 ) else (
-    echo [WARNING] Plugin DLL not found. Please build the plugin first.
+    echo [WARNING] Plugin DLL not found. Please build the plugin first by running build_simple.bat
 )
 
 :: Copy Python files

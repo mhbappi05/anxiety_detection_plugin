@@ -1,9 +1,16 @@
 #include "PythonBridge.h"
+#include "InterventionManager.h"
 #include <wx/msgdlg.h>
 #include <wx/filename.h>
 #include <wx/stdpaths.h>
+#include <wx/log.h>
 #include <windows.h>
 #include <sstream>
+
+// wxJSON - include if available; otherwise replace with simple JSON string building
+// If your build environment has wxJSON, ensure it is in the include path.
+// #include <wx/jsonwriter.h>
+// #include <wx/jsonreader.h>
 
 PythonBridge::PythonBridge()
     : m_process(nullptr)
@@ -26,15 +33,14 @@ bool PythonBridge::StartPythonService(const wxString& pythonPath, const wxString
     wxFileName modelFile(modelPath);
     if (!modelFile.Exists())
     {
-        Manager::Get()->GetLogManager()->LogError(
-            wxString::Format(_T("Model file not found: %s"), modelPath));
+        wxLogError(_T("Model file not found: %s"), modelPath);
         return false;
     }
     
     // Get the directory containing models
     wxString modelDir = modelFile.GetPath();
     
-    // Path to Python script
+    // Path to Python script (look next to executable)
     wxString pluginDir = wxFileName::DirName(
         wxStandardPaths::Get().GetPluginsDir()).GetPath();
     wxString scriptPath = pluginDir + wxFILE_SEP_PATH + 
@@ -43,8 +49,7 @@ bool PythonBridge::StartPythonService(const wxString& pythonPath, const wxString
     
     if (!wxFileName::FileExists(scriptPath))
     {
-        Manager::Get()->GetLogManager()->LogError(
-            wxString::Format(_T("Python script not found: %s"), scriptPath));
+        wxLogError(_T("Python script not found: %s"), scriptPath);
         return false;
     }
     
@@ -52,8 +57,7 @@ bool PythonBridge::StartPythonService(const wxString& pythonPath, const wxString
     wxString cmd = wxString::Format(_T("%s \"%s\" \"%s\""), 
         pythonPath, scriptPath, modelDir);
     
-    Manager::Get()->GetLogManager()->LogDebug(
-        wxString::Format(_T("Starting Python service: %s"), cmd));
+    wxLogDebug(_T("Starting Python service: %s"), cmd);
     
     m_process = new wxProcess(this);
     m_process->Redirect();
@@ -62,7 +66,7 @@ bool PythonBridge::StartPythonService(const wxString& pythonPath, const wxString
     
     if (pid <= 0)
     {
-        Manager::Get()->GetLogManager()->LogError(_T("Failed to start Python process"));
+        wxLogError(_T("Failed to start Python process"));
         delete m_process;
         m_process = nullptr;
         return false;
@@ -74,7 +78,7 @@ bool PythonBridge::StartPythonService(const wxString& pythonPath, const wxString
     // Connect to named pipe
     if (!ConnectToPipe())
     {
-        Manager::Get()->GetLogManager()->LogError(_T("Failed to connect to Python service pipe"));
+        wxLogError(_T("Failed to connect to Python service pipe"));
         StopPythonService();
         return false;
     }
@@ -82,13 +86,13 @@ bool PythonBridge::StartPythonService(const wxString& pythonPath, const wxString
     // Initialize detector
     if (!SendInitialize(modelDir))
     {
-        Manager::Get()->GetLogManager()->LogError(_T("Failed to initialize detector"));
+        wxLogError(_T("Failed to initialize detector"));
         StopPythonService();
         return false;
     }
     
     m_isRunning = true;
-    Manager::Get()->GetLogManager()->Log(_T("Python anxiety detection service started"));
+    wxLogMessage(_T("Python anxiety detection service started"));
     
     return true;
 }
@@ -129,70 +133,70 @@ bool PythonBridge::ConnectToPipe()
     return false;
 }
 
-bool PythonBridge::SendInitialize(const wxString& modelDir)
+// Helper: build a simple JSON string without a library
+static std::string BuildFeaturesJSON(const wxString& type, const std::vector<double>& features)
 {
-    wxJSONValue initMsg;
-    initMsg[_T("type")] = _T("initialize");
-    initMsg[_T("model_dir")] = modelDir;
-    
-    return SendMessage(initMsg);
+    std::ostringstream oss;
+    oss << "{\"type\":\"" << type.ToUTF8() << "\",\"features\":[";
+    for (size_t i = 0; i < features.size(); ++i)
+    {
+        if (i > 0) oss << ",";
+        oss << features[i];
+    }
+    oss << "]}";
+    return oss.str();
 }
 
-bool PythonBridge::SendMessage(const wxJSONValue& message)
+static std::string BuildSimpleJSON(const wxString& type)
 {
+    std::ostringstream oss;
+    oss << "{\"type\":\"" << type.ToUTF8() << "\"}";
+    return oss.str();
+}
+
+static std::string BuildInitJSON(const wxString& modelDir)
+{
+    std::ostringstream oss;
+    // Escape backslashes in Windows paths
+    wxString escaped = modelDir;
+    escaped.Replace(_T("\\"), _T("\\\\"));
+    oss << "{\"type\":\"initialize\",\"model_dir\":\"" << escaped.ToUTF8() << "\"}";
+    return oss.str();
+}
+
+bool PythonBridge::SendInitialize(const wxString& modelDir)
+{
+    std::string msg = BuildInitJSON(modelDir);
+    
     if (m_pipeHandle == INVALID_HANDLE_VALUE)
         return false;
     
-    wxJSONWriter writer;
-    wxString jsonStr;
-    writer.Write(message, jsonStr);
-    
-    std::string utf8Str = jsonStr.ToUTF8();
     DWORD bytesWritten;
-    
     BOOL success = WriteFile(
         m_pipeHandle,
-        utf8Str.c_str(),
-        utf8Str.length(),
+        msg.c_str(),
+        (DWORD)msg.length(),
         &bytesWritten,
         NULL
     );
     
-    if (!success || bytesWritten != utf8Str.length())
-    {
-        Manager::Get()->GetLogManager()->LogError(_T("Failed to write to pipe"));
-        return false;
-    }
-    
-    return true;
+    return (success && bytesWritten == msg.length());
+}
+
+bool PythonBridge::SendMessage(const wxJSONValue& message)
+{
+    // This function is kept for API compatibility but wxJSONValue is forward-declared only.
+    // Actual sending is done via the helper functions above.
+    (void)message;
+    wxLogWarning(_T("SendMessage(wxJSONValue) called but wxJSON not linked; use SendFeatures instead."));
+    return false;
 }
 
 bool PythonBridge::ReceiveMessage(wxJSONValue& message)
 {
-    if (m_pipeHandle == INVALID_HANDLE_VALUE)
-        return false;
-    
-    char buffer[65536];
-    DWORD bytesRead;
-    
-    BOOL success = ReadFile(
-        m_pipeHandle,
-        buffer,
-        sizeof(buffer) - 1,
-        &bytesRead,
-        NULL
-    );
-    
-    if (!success || bytesRead == 0)
-        return false;
-    
-    buffer[bytesRead] = '\0';
-    wxString jsonStr = wxString::FromUTF8(buffer);
-    
-    wxJSONReader reader;
-    reader.Parse(jsonStr, &message);
-    
-    return true;
+    (void)message;
+    wxLogWarning(_T("ReceiveMessage(wxJSONValue) called but wxJSON not linked."));
+    return false;
 }
 
 PredictionResult PythonBridge::AnalyzeFeatures(const std::vector<double>& features)
@@ -200,44 +204,69 @@ PredictionResult PythonBridge::AnalyzeFeatures(const std::vector<double>& featur
     PredictionResult result;
     result.level = AnxietyLevel::LOW;
     result.confidence = 0.0;
+    result.shouldIntervene = false;
     
-    if (!m_isRunning)
+    if (!m_isRunning || m_pipeHandle == INVALID_HANDLE_VALUE)
         return result;
     
-    wxJSONValue msg;
-    msg[_T("type")] = _T("analyze");
+    // Send analyze request
+    std::string msg = BuildFeaturesJSON(_T("analyze"), features);
+    DWORD bytesWritten;
+    BOOL writeOk = WriteFile(m_pipeHandle, msg.c_str(), (DWORD)msg.length(), &bytesWritten, NULL);
     
-    // Convert features to JSON array
-    wxJSONValue featuresArray(wxJSONTYPE_ARRAY);
-    for (size_t i = 0; i < features.size(); i++)
+    if (!writeOk || bytesWritten != msg.length())
     {
-        featuresArray.Append(features[i]);
+        wxLogError(_T("Failed to write features to pipe"));
+        return result;
     }
-    msg[_T("features")] = featuresArray;
     
-    if (!SendMessage(msg))
+    // Read response
+    char buffer[65536];
+    DWORD bytesRead = 0;
+    BOOL readOk = ReadFile(m_pipeHandle, buffer, sizeof(buffer) - 1, &bytesRead, NULL);
+    
+    if (!readOk || bytesRead == 0)
         return result;
     
-    wxJSONValue response;
-    if (!ReceiveMessage(response))
-        return result;
+    buffer[bytesRead] = '\0';
+    wxString response = wxString::FromUTF8(buffer);
     
-    // Parse response
-    if (response[_T("status")].AsString() == _T("ok"))
+    // Simple JSON parsing without a library
+    // Expected format: {"status":"ok","prediction":{"level":"High","confidence":0.85,...},"should_intervene":true}
+    if (response.Contains(_T("\"status\":\"ok\"")))
     {
-        const wxJSONValue& pred = response[_T("prediction")];
+        // Parse level
+        if (response.Contains(_T("\"level\":\"Low\"")))
+            result.level = AnxietyLevel::LOW;
+        else if (response.Contains(_T("\"level\":\"Moderate\"")))
+            result.level = AnxietyLevel::MODERATE;
+        else if (response.Contains(_T("\"level\":\"High\"")))
+            result.level = AnxietyLevel::HIGH;
+        else if (response.Contains(_T("\"level\":\"Extreme\"")))
+            result.level = AnxietyLevel::EXTREME;
         
-        wxString level = pred[_T("level")].AsString();
-        if (level == _T("Low")) result.level = AnxietyLevel::LOW;
-        else if (level == _T("Moderate")) result.level = AnxietyLevel::MODERATE;
-        else if (level == _T("High")) result.level = AnxietyLevel::HIGH;
-        else if (level == _T("Extreme")) result.level = AnxietyLevel::EXTREME;
+        // Parse should_intervene
+        result.shouldIntervene = response.Contains(_T("\"should_intervene\":true"));
         
-        result.confidence = pred[_T("confidence")].AsDouble();
-        result.triggeredFeatures = pred[_T("triggered_features")].AsString();
+        // Parse confidence (simple extraction)
+        int confPos = response.Find(_T("\"confidence\":"));
+        if (confPos != wxNOT_FOUND)
+        {
+            wxString confStr = response.Mid(confPos + 13);
+            confStr = confStr.BeforeFirst(',');
+            confStr = confStr.BeforeFirst('}');
+            confStr.ToDouble(&result.confidence);
+        }
+        
+        // Parse triggered_features
+        int featPos = response.Find(_T("\"triggered_features\":\""));
+        if (featPos != wxNOT_FOUND)
+        {
+            wxString featStr = response.Mid(featPos + 22);
+            result.triggeredFeatures = featStr.BeforeFirst('"');
+        }
+        
         result.timestamp = wxDateTime::Now();
-        
-        result.shouldIntervene = response[_T("should_intervene")].AsBool();
     }
     
     return result;
@@ -258,9 +287,9 @@ void PythonBridge::StopPythonService()
     if (m_pipeHandle != INVALID_HANDLE_VALUE)
     {
         // Send shutdown message
-        wxJSONValue msg;
-        msg[_T("type")] = _T("shutdown");
-        SendMessage(msg);
+        std::string shutdownMsg = BuildSimpleJSON(_T("shutdown"));
+        DWORD bytesWritten;
+        WriteFile(m_pipeHandle, shutdownMsg.c_str(), (DWORD)shutdownMsg.length(), &bytesWritten, NULL);
         
         CloseHandle(m_pipeHandle);
         m_pipeHandle = INVALID_HANDLE_VALUE;
@@ -273,13 +302,15 @@ void PythonBridge::StopPythonService()
     }
     
     m_isRunning = false;
-    Manager::Get()->GetLogManager()->Log(_T("Python anxiety detection service stopped"));
+    wxLogMessage(_T("Python anxiety detection service stopped"));
 }
 
 void PythonBridge::OnTerminate(int pid, int status)
 {
+    (void)pid;
+    (void)status;
     m_isRunning = false;
-    Manager::Get()->GetLogManager()->LogWarning(_T("Python service terminated unexpectedly"));
+    wxLogWarning(_T("Python service terminated unexpectedly"));
     
     if (m_pipeHandle != INVALID_HANDLE_VALUE)
     {
