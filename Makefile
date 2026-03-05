@@ -9,8 +9,11 @@ CXX = C:/msys64/ucrt64/bin/g++
 WX_INC_BASE  = C:/msys64/ucrt64/include/wx-3.2
 WX_INC_SETUP = C:/msys64/ucrt64/lib/wx/include/msw-unicode-3.2
 
+SDK_INC = sdk
+
 CXXFLAGS = -O2 -Wall -std=c++17 \
            -D__WXMSW__ -DwxUSE_UNICODE=1 -D_UNICODE -DUNICODE -DHAVE_W32API_H \
+           -I"$(SDK_INC)" \
            -I"$(WX_INC_BASE)" \
            -I"$(WX_INC_SETUP)"
 

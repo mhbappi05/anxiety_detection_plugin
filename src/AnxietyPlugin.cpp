@@ -24,13 +24,10 @@
 #include <wx/datetime.h>
 #include <wx/dcmemory.h>
 
-// Register the plugin
-// namespace
-// {
-//     PluginRegistrant<AnxietyPlugin> reg(_T("AnxietyPlugin"));
-// }
+// Register the plugin — emits CreatePlugin / FreePlugin / GetPluginSDKVersion exports
+CB_PLUGIN_REGISTRANT(AnxietyPlugin)
 
-wxBEGIN_EVENT_TABLE(AnxietyPlugin, wxEvtHandler)
+wxBEGIN_EVENT_TABLE(AnxietyPlugin, cbPlugin)
     EVT_TIMER(wxID_ANY, AnxietyPlugin::OnTimer)
     EVT_MENU(wxID_START_MONITORING, AnxietyPlugin::OnStartMonitoring)
     EVT_MENU(wxID_STOP_MONITORING, AnxietyPlugin::OnStopMonitoring)
